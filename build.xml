@@ -1,0 +1,150 @@
+<project name="JDigiDoc" basedir="." default="compile">
+	<property name="jdigidoc.dir" location="jdigidoc" />
+	<property name="src.dir" location="jdigidoc/src/main/java" />
+	<property name="test.dir" location="jdigidoc/src/test/java" />
+	<property name="resources.dir" location="jdigidoc/src/main/resources" />
+	<property name="certs.dir" location="jdigidoc/src/main/resources/certs" />
+    	<property file="version.properties" />
+	<property name="lib.dir" location="lib" />
+	<property name="tmp.dir" location="tmp" />
+	<property name="web.dir" location="web" />
+	<property name="classes.dir" location="${tmp.dir}/classes" />
+	<property name="javadoc.gen.dir" location="${tmp.dir}/javadoc" />
+	<property environment="env" />
+
+
+	<path id="master-classpath">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${classes.dir}" />
+		<pathelement location="${env.JAVA_HOME}/lib/tools.jar" />
+	</path>
+
+        <patternset id="jar.patternset">
+                <include name="**/*.*" />
+        </patternset>
+
+	<!-- fileset used to generate javadoc for client.jar -->
+	<fileset dir="${src.dir}" id="javadoc-fileset">
+		<patternset refid="jar.patternset" />
+	</fileset>
+
+	<fileset dir="${src.dir}" id="javadoc-fileset">
+		<patternset refid="jar.patternset" />
+	</fileset>
+
+  	<fileset dir="${resources.dir}" id="sk-prod-certs">
+		<include name="certs/EID-SK*.crt" />
+		<include name="certs/ESTEID-SK*.crt" />
+		<include name="certs/JUUR-SK.crt" />
+		<include name="certs/KLASS3-SK*.crt" />
+		<include name="certs/EECCRCA.crt" />
+		<include name="certs/SK OCSP 2011.crt" />
+		<include name="certs/SK_proxy_OCSP_responder_2009.pem.cer" />
+	</fileset> 
+			
+   	<fileset dir="${resources.dir}" id="sk-test-certs">
+		<include name="certs/TEST*.crt" />
+                <include name="certs/iaik-tsa*.crt" />
+	</fileset> 
+
+   	<fileset dir="${lib.dir}" id="jd-libs">
+		<include name="bcmail-jdk15on-148.jar" />
+		<include name="bcprov-jdk15on-148.jar" />
+		<include name="bcpkix-jdk15on-148.jar" />
+		<include name="commons-codec-1.6.jar" />
+		<include name="commons-compress-1.3.jar" />
+		<include name="iaikPkcs11Wrapper.jar" />
+		<include name="jakarta-log4j-1.2.6.jar" />
+	</fileset> 
+
+	<target name="clean" description="Remove generated files">
+		<delete dir="${tmp.dir}"/>
+	</target>
+
+	<target name="init" description="Make neccessary preparations">
+		<mkdir dir="${tmp.dir}" />
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${javadoc.gen.dir}" />
+		<copy todir="${tmp.dir}">
+			<fileset dir="${resources.dir}">
+			  <include name="jdigidoc.cfg" />
+			  <include name="log4j.properties" />
+			  <include name="jdigidoc.sh" />
+			  <include name="jdigidoc.bat" />
+			</fileset>
+			<fileset refid="jd-libs"/>
+		</copy>
+	</target>
+
+	<target name="whenJava">
+		<condition property="caller.java" value="true">
+			<contains string="${caller.name}" substring=".java" casesensitive="false" />
+		</condition>
+	</target>
+	
+	<target name="build" depends="compile"
+		description="Compile, for those of us used to 'build' ;)"/>
+	
+	<target name="compile"  description="Compile main source tree java files"
+		depends="init">
+		<javac destdir="${classes.dir}" target="1.5" debug="true"
+			deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
+			<src path="${src.dir}" />
+			<src path="${test.dir}" />
+			<classpath refid="master-classpath" />
+			<compilerarg line="-Xlint:unchecked" />
+		</javac>
+	</target>
+
+	<target name="javadoc" depends="jar" description="Generate API documentation">
+		<javadoc
+			classpathref="master-classpath"
+			destdir="${javadoc.gen.dir}"
+			author="true"
+			version="true"
+			use="true"
+			windowtitle="JDigiDoc API"
+			encoding="UTF-8"
+			failonerror="true"
+			charset="UTF-8">
+			<fileset refid="javadoc-fileset"/>
+			<doctitle><![CDATA[<h1>JDigiDoc</h1>]]></doctitle>
+		</javadoc>
+		<zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${currentVersion}-javadoc.zip"/>
+	</target>
+	
+	<target name="jdcerts" depends="compile" description="Create a JAR file.">
+		<delete file="${tmp.dir}/jdcerts.jar" failonerror="false"/>
+		<jar destfile="${tmp.dir}/jdcerts.jar" update="false">
+			<fileset refid="sk-test-certs" />
+		</jar>
+	</target>
+	
+	<target name="jar" depends="compile,jdcerts" description="Create a JAR file.">
+		<delete file="${tmp.dir}/${ant.project.name}.jar" failonerror="false"/>
+		<jar destfile="${tmp.dir}/${ant.project.name}.jar" update="false">
+			<fileset dir="${classes.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset refid="sk-prod-certs" />
+		</jar>
+	</target>
+
+	<target name="source" description="Create a source JAR file.">
+		<delete file="${tmp.dir}/*-source.jar" failonerror="false"/>
+		<copy file="build.xml" todir="${jdigidoc.dir}"/>
+		<jar destfile="${tmp.dir}/jdigidoc-${currentVersion}-source.jar" update="false">
+			<fileset dir="${src.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${test.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${jdigidoc.dir}">
+        <include name="*.xml" />
+      </fileset>
+		</jar>
+	</target>
+</project>
