@@ -2,7 +2,7 @@
  * SAXDigiDocFactory.java
  * PROJECT: JDigiDoc
  * DESCRIPTION: Digi Doc functions for reading signed documents.
- * AUTHOR:  Veiko Sinivee, Sunset Software O��
+ * AUTHOR:  Veiko Sinivee, Sunset Software O������
  *==================================================
  * Copyright (C) AS Sertifitseerimiskeskus
  * This library is free software; you can redistribute it and/or
@@ -390,6 +390,9 @@ public class SAXDigiDocFactory
 			throw new DigiDocException(DigiDocException.ERR_READ_FILE, "Empty or unreadable input file", null);
 		  }
 		}
+		ZipFile zf = null;
+		ZipArchiveInputStream zis = null;
+		ZipArchiveEntry ze = null;
 		try {
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
@@ -398,9 +401,6 @@ public class SAXDigiDocFactory
 				m_doc = new SignedDoc();
 				m_doc.setVersion(SignedDoc.BDOC_VERSION_1_0);
 				m_doc.setFormat(SignedDoc.FORMAT_BDOC);
-				ZipFile zf = null;
-				ZipArchiveInputStream zis = null;
-				ZipArchiveEntry ze = null;
 				Enumeration eFiles = null;
 				if(fname != null) {
 					zf = new ZipFile(fname, "UTF-8");
@@ -582,6 +582,15 @@ public class SAXDigiDocFactory
 				}
 			}*/
 			handleError(ex);
+		} finally { // cleanup
+			try {
+			  if(zis != null)
+				zis.close();
+			  if(zf != null)
+				zf.close();
+			} catch(Exception ex) {
+				m_logger.error("Error closing streams and files: " + ex);
+			}
 		}
 		// compare Manifest and DataFiles
 		boolean bOk = DigiDocVerifyFactory.verifyManifestEntries(m_doc, errs);
