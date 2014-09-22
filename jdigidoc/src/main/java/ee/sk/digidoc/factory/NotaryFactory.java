@@ -23,11 +23,9 @@ package ee.sk.digidoc.factory;
 import ee.sk.digidoc.DigiDocException;
 import ee.sk.digidoc.Notary;
 import ee.sk.digidoc.Signature;
-
 import java.io.ByteArrayOutputStream;
 import java.security.cert.X509Certificate;
-
-import org.bouncycastle.ocsp.OCSPResp;
+import org.bouncycastle.cert.ocsp.OCSPResp;
 
 /**
  * Interface for notary functions

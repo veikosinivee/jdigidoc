@@ -100,14 +100,13 @@ public class DigiDocGenFactory {
 	    	                        ASN1Sequence cp = (ASN1Sequence)extIn.readObject();
 	                        for (int i = 0; i != cp.size(); i++) {
 	                        	PolicyInformation pol = PolicyInformation.getInstance(cp.getObjectAt(i));
-	                        	DERObjectIdentifier dOid = null;
+	                        	//DERObjectIdentifier dOid = null;
 	                        	if(pol != null) {
-	                        	  dOid = pol.getPolicyIdentifier();
-	                        	  if(dOid != null) {
-	                        	    String soid2 = dOid.getId();
+	                        	  String sId = pol.getPolicyIdentifier().getId();   //getPolicyIdentifier();
+	                        	  if(sId != null) {
 	                        	    if(m_logger.isDebugEnabled())
-	                        		  m_logger.debug("Policy: " + soid2);
-	                        	    if(soid2.startsWith(sOid))
+	                        		  m_logger.debug("Policy: " + sId);
+	                        	    if(sId.startsWith(sOid))
 	                        		  return true;
 	                        	  }
 	                        	}
