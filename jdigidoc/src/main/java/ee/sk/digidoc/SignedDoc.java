@@ -3,7 +3,7 @@
  * PROJECT: JDigiDoc
  * DESCRIPTION: Digi Doc functions for creating
  *	and reading signed documents. 
- * AUTHOR:  Veiko Sinivee, Sunset Software O��
+ * AUTHOR:  Veiko Sinivee, Sunset Software O������
  *==================================================
  * Copyright (C) AS Sertifitseerimiskeskus
  * This library is free software; you can redistribute it and/or
@@ -383,7 +383,7 @@ public class SignedDoc implements Serializable
      */
     public String findSignatureProfile(String sigId)
     {
-    	return ((m_sigFormats != null) ? (String)m_sigFormats.get(sigId) : null);
+    	return ((m_sigFormats != null && sigId != null) ? (String)m_sigFormats.get(sigId) : null);
     }
     
     /**
