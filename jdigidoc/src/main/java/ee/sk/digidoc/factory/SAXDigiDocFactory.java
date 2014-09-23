@@ -766,10 +766,21 @@ public class SAXDigiDocFactory
 		throws DigiDocException 
 	{
 		m_doc = sdoc;
-		//m_doc.addSignature(new Signature(sdoc));
 		m_nCollectMode = 0;
 		try {
-			SAXParserFactory factory = SAXParserFactory.newInstance(); 
+			// prepare validator to receive signature from xml file as root element
+			if(sdoc != null && sdoc.getFormat() != null) {
+				XmlElemInfo e = null;
+				// for BDOC
+				if(SignedDoc.FORMAT_BDOC.equals(sdoc.getFormat())) {
+					e = new XmlElemInfo("XAdESSignatures", null, null);
+				} else if(SignedDoc.FORMAT_DIGIDOC_XML.equals(sdoc.getFormat())) {
+					e = new XmlElemInfo("SignedDoc", null, null);
+				}
+				if(e != null) 
+					m_elemRoot = m_elemCurrent = e;
+			}
+	        SAXParserFactory factory = SAXParserFactory.newInstance(); 
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 			SAXParser saxParser = factory.newSAXParser();
@@ -1301,7 +1312,7 @@ public class SAXDigiDocFactory
 						sig.setProfile(SignedDoc.BDOC_PROFILE_TM);*/
 					m_doc.addSignature(sig);
 					if (m_logger.isDebugEnabled())
-						m_logger.debug("Sig1: " + m_fileName + " profile: " + sProfile);
+						m_logger.debug("Sig1: " + m_fileName + " profile: " + sProfile + " doc: " + ((m_doc != null) ? "OK" : "NULL"));
 				} else {
 					m_sig = new Signature(null);
 					m_sig.setPath(m_fileName);
