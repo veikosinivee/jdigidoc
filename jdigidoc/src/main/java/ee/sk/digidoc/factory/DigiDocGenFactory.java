@@ -2,9 +2,11 @@ package ee.sk.digidoc.factory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.io.InputStream;
+
 import org.apache.log4j.Logger;
 import org.bouncycastle.tsp.TSPAlgorithms;
 import org.bouncycastle.tsp.TimeStampResponse;
+
 import ee.sk.digidoc.*;
 import ee.sk.utils.ConfigManager;
 import ee.sk.utils.ConvertUtils;
@@ -15,6 +17,8 @@ import java.util.Iterator;
 import java.util.Enumeration;
 //import org.bouncycastle.x509.
 import java.io.ByteArrayInputStream;
+
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -24,7 +28,9 @@ import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.PolicyInformation;
+
 import java.util.*;
+
 import org.bouncycastle.util.*;
 import org.bouncycastle.cms.*;
 import org.bouncycastle.cert.*;
@@ -91,7 +97,11 @@ public class DigiDocGenFactory {
 	            if (ext != null) {
 	            	Enumeration    en = ext.oids();
 	                while (en.hasMoreElements()) {
-	                	DERObjectIdentifier oid = (DERObjectIdentifier)en.nextElement();
+	                	Object o = en.nextElement();
+	                	if(o instanceof ASN1ObjectIdentifier) {
+	                	ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier)o;
+	                	//if(m_logger.isDebugEnabled())
+	        	    	//	m_logger.debug("Oid: " + oid.getId());
 	                    X509Extension extVal = ext.getExtension(oid);
 	                    ASN1OctetString oct = extVal.getValue();
 	                    ASN1InputStream extIn = new ASN1InputStream(new ByteArrayInputStream(oct.getOctets()));
@@ -112,6 +122,7 @@ public class DigiDocGenFactory {
 	                        	}
 	                        }
 	                    }
+	                	} // instanceof
 	                }
 	            }
 
