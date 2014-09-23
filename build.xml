@@ -173,8 +173,8 @@
         </target>
 
 	<target name="distjar" depends="compile,jdcerts" description="Create a JAR file.">
-                <delete file="${tmp.dir}/jdigidoc—${env.JDD_VERSION}.jar" failonerror="false"/>
-                <jar destfile="${tmp.dir}/jdigidoc—${env.JDD_VERSION}.jar" update="false">
+                <delete file="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" update="false">
                         <fileset dir="${classes.dir}">
                                 <include name="**/*.*" />
                         </fileset>
@@ -183,7 +183,7 @@
         </target>
 
 	<target name="deplibs" depends="distjar">
-		<zip destfile="${tmp.dir}/jdigidoc—libs-${env.JDD_VERSION}.zip">
+		<zip destfile="${tmp.dir}/jdigidoc-libs-${env.JDD_VERSION}.zip">
 		<fileset refid="jd-libs"/>
 		</zip>
         </target>
@@ -207,7 +207,7 @@
 	<target name="distzip" depends="distjar,source,javadoc,util-jar">
 		<delete dir="${classes.dir}"/>
 		<delete dir="${javadoc.gen.dir}"/>
-                <zip destfile="${tmp.dir}//jdigidoc—${env.JDD_VERSION}.zip">
+                <zip destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.zip">
 		<fileset dir="${tmp.dir}">
 			<include name="**/*.*" />
 		</fileset>
