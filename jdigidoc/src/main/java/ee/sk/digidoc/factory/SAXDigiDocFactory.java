@@ -1005,7 +1005,8 @@ public class SAXDigiDocFactory
 		}
 		// record elements found
         XmlElemInfo e = new XmlElemInfo(tag, findAttrValueByName(attrs, "id"), m_elemCurrent);
-        if(m_elemCurrent != null)
+        // <XAdESSignatures> and <SignedDoc> cannot be child of another element, must be root elements
+        if(m_elemCurrent != null && !tag.equals("XAdESSignatures") && !tag.equals("SignedDoc"))
             m_elemCurrent.addChild(e);
         m_elemCurrent = e;
         if(m_elemRoot == null)
