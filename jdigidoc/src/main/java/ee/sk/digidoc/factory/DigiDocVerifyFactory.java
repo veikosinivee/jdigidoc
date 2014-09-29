@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import javax.crypto.Cipher;
+
 import org.apache.commons.compress.archivers.*;
 import org.apache.log4j.Logger;
 import org.bouncycastle.tsp.TSPAlgorithms;
 import org.bouncycastle.tsp.TimeStampResponse;
+
 import ee.sk.digidoc.*;
 import ee.sk.utils.ConfigManager;
 import ee.sk.utils.ConvertUtils;
@@ -71,6 +73,7 @@ public class DigiDocVerifyFactory {
 				if(sdoc.getManifest() != null) {
 				  for(int j = 0; j < sdoc.getManifest().getNumFileEntries(); j++) {
 					ManifestFileEntry mfe = sdoc.getManifest().getFileEntry(j);
+					System.out.println("MFE: " + mfe.getFullPath() + " mime: " + mfe.getMediaType() + " df: " + df.getId() + " df-mime: " + df.getMimeType());
 					if(mfe.getFullPath() != null && mfe.getFullPath().equals(df.getFileName())) {
 						if(bF) {
 							lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
@@ -87,8 +90,23 @@ public class DigiDocVerifyFactory {
 							bOk = false;
 						}
 					}
+				  } // for j
+				  for(int s = 0; s < sdoc.countSignatures(); s++) {
+					  Signature sig = sdoc.getSignature(s);
+					  Reference dRef = sig.getSignedInfo().getReferenceForDataFile(df);
+					  if(dRef != null) {
+						  DataObjectFormat dof = sig.getSignedInfo().getDataObjectFormatForReference(dRef);
+						  if(dof != null) {
+						    if(df.getMimeType() != null && dof.getMimeType() != null && !dof.getMimeType().equals(df.getMimeType())) {
+						    	lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_MIME_TYPE,
+										"DataFile " + df.getFileName() + " mime-type: " + df.getMimeType() + 
+										" does not match signature: " + sig.getId() + " mime type: " + dof.getMimeType(), null));
+								bOk = false;
+						    }
+						  }
+					  }
 				  }
-				}
+				} // for s
 				if(!bF) {
 					lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
 							"Missing ManifestFileEntry for: " + df.getFileName(), null));
@@ -116,7 +134,7 @@ public class DigiDocVerifyFactory {
 				}
 			}
 		}
-		return bOk;
+    	return bOk;
 	}
     
     private static final String DIG_TYPE_WARNING = "The current BDoc container uses weaker encryption method than officialy accepted in Estonia. "+
