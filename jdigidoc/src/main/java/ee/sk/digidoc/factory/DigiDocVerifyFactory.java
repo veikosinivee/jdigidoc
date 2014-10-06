@@ -65,19 +65,28 @@ public class DigiDocVerifyFactory {
 			throws DigiDocException
 	{
     	boolean bOk = true;
+    	if(m_logger.isDebugEnabled()) 
+        	m_logger.debug("Verifying manifest entries");
     	if(sdoc != null && sdoc.getFormat() != null && sdoc.getFormat().equals(SignedDoc.FORMAT_BDOC)) {
 			// compare ManifestFileEntry-s and DataFile-s match
 			for(int i = 0; i < sdoc.countDataFiles(); i++) {
 				DataFile df = sdoc.getDataFile(i);
 				boolean bF = false;
+				String sFileName = df.getFileName();
+				File ft1 = new File(df.getFileName());
+				sFileName = ft1.getName();
 				if(sdoc.getManifest() != null) {
 				  for(int j = 0; j < sdoc.getManifest().getNumFileEntries(); j++) {
 					ManifestFileEntry mfe = sdoc.getManifest().getFileEntry(j);
-					System.out.println("MFE: " + mfe.getFullPath() + " mime: " + mfe.getMediaType() + " df: " + df.getId() + " df-mime: " + df.getMimeType());
-					if(mfe.getFullPath() != null && mfe.getFullPath().equals(df.getFileName())) {
+					if(m_logger.isDebugEnabled()) 
+		            	m_logger.debug("Manifest entry: " + mfe.getFullPath() + " mime: " + mfe.getMediaType() + " df: " + df.getId() + " df-mime: " + df.getMimeType());
+					
+					if(mfe.getFullPath() != null && mfe.getFullPath().equals(sFileName)) {
 						if(bF) {
 							lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
 									"Duplicate ManifestFileEntry for: " + df.getFileName(), null));
+							if(m_logger.isDebugEnabled()) 
+				            	m_logger.error("Duplicate ManifestFileEntry for: " + df.getFileName());
 							bOk = false;
 						} else {
 							bF = true;
@@ -87,6 +96,9 @@ public class DigiDocVerifyFactory {
 							lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_MIME_TYPE,
 									"DataFile " + df.getFileName() + " mime-type: " + df.getMimeType() + 
 									" does not match manifest mime type: " + mfe.getMediaType(), null));
+							if(m_logger.isDebugEnabled()) 
+				            	m_logger.error("DataFile " + df.getFileName() + " mime-type: " + df.getMimeType() + 
+										" does not match manifest mime type: " + mfe.getMediaType());
 							bOk = false;
 						}
 					}
@@ -101,6 +113,9 @@ public class DigiDocVerifyFactory {
 						    	lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_MIME_TYPE,
 										"DataFile " + df.getFileName() + " mime-type: " + df.getMimeType() + 
 										" does not match signature: " + sig.getId() + " mime type: " + dof.getMimeType(), null));
+						    	if(m_logger.isDebugEnabled()) 
+					            	m_logger.error("DataFile " + df.getFileName() + " mime-type: " + df.getMimeType() + 
+											" does not match signature: " + sig.getId() + " mime type: " + dof.getMimeType());
 								bOk = false;
 						    }
 						  }
@@ -110,18 +125,29 @@ public class DigiDocVerifyFactory {
 				if(!bF) {
 					lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
 							"Missing ManifestFileEntry for: " + df.getFileName(), null));
+					if(m_logger.isDebugEnabled()) 
+		            	m_logger.error("Missing ManifestFileEntry1 for: " + sFileName);
 				}
 			}
 			for(int j = 0; j < sdoc.getManifest().getNumFileEntries(); j++) {
 				ManifestFileEntry mfe = sdoc.getManifest().getFileEntry(j);
+				if(m_logger.isDebugEnabled()) 
+	            	m_logger.debug("Check manifest entry: " + mfe.getFullPath() + " mime: " + mfe.getMediaType());
 				if(mfe.getFullPath() != null && mfe.getFullPath().equals("/")) continue; // container root element
 				boolean bF = false;
 				for(int i = 0; i < sdoc.countDataFiles(); i++) {
 				 DataFile df = sdoc.getDataFile(i);
-				 if(mfe.getFullPath() != null && mfe.getFullPath().equals(df.getFileName())) {
+				 String sFileName = df.getFileName();
+				 File ft1 = new File(df.getFileName());
+				 sFileName = ft1.getName();
+				 if(m_logger.isDebugEnabled()) 
+		            	m_logger.debug("Manifest entry: " + mfe.getFullPath() + " mime: " + mfe.getMediaType() + " found df: " + df.getId() + " df-mime: " + df.getMimeType());
+				 if(mfe.getFullPath() != null && mfe.getFullPath().equals(sFileName)) {
 					if(bF) {
 						lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
 								"Duplicate DataFile: " + df.getId() + " with name: " + df.getFileName(), null));
+						if(m_logger.isDebugEnabled()) 
+			            	m_logger.error("Duplicate DataFile: " + df.getId() + " with name: " + df.getFileName());
 						bOk = false;
 					} else {
 						bF = true;
@@ -131,6 +157,8 @@ public class DigiDocVerifyFactory {
 				if(!bF) {
 					lerrs.add(new DigiDocException(DigiDocException.ERR_MANIFEST_ENTRY,
 							"Missing DataFile for ManifestFileEntry: " + mfe.getFullPath(), null));
+					if(m_logger.isDebugEnabled()) 
+		            	m_logger.error("Missing DataFile for ManifestFileEntry: " + mfe.getFullPath());
 				}
 			}
 		}
