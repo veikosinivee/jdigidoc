@@ -593,11 +593,18 @@ public class SAXDigiDocFactory
 			}
 		}
 		// compare Manifest and DataFiles
+		boolean bErrList = (errs != null);
+		if(errs == null)
+			errs = new ArrayList();
 		boolean bOk = DigiDocVerifyFactory.verifyManifestEntries(m_doc, errs);
 		if(m_doc == null) {
 			m_logger.error("Error reading4: doc == null");
 		  handleError(new DigiDocException(DigiDocException.ERR_DIGIDOC_BADXML,
 				"This document is not in ddoc or bdoc format", null));
+		}
+		if(!bErrList && errs.size() > 0) { // if error list was not used then we have to throw exception. So we will throw the first one since we can only do it once
+			DigiDocException ex = (DigiDocException)errs.get(0); 
+			throw ex;
 		}
 		return m_doc;
 	}
