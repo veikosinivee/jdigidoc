@@ -1,0 +1,3 @@
+[submodule "jdigidoc/src/main/resources/certs"]
+	path = jdigidoc/src/main/resources/certs
+	url = ssh://git@stash.ria.ee:7799/baas/certs.git
