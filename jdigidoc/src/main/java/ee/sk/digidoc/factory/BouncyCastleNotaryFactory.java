@@ -1358,15 +1358,6 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
 			  " subject: " + ConvertUtils.bin2hex(certId.getIssuerNameHash()) + 
 			  " nonce: " + ConvertUtils.bin2hex(nonce) + " len: " + nonce.length);
 			ocspRequest.addRequest(certId);
-			if(nonce != null && nonce[0] != V_ASN1_OCTET_STRING && !bBdoc) {
-				byte[] b = new byte[nonce.length + 2];
-				b[0] = V_ASN1_OCTET_STRING;
-				b[1] = (byte)nonce.length;
-				System.arraycopy(nonce, 0, b, 2, nonce.length);
-				if(m_logger.isDebugEnabled())
-		    	  m_logger.debug("Nonce in: " + ConvertUtils.bin2hex(nonce) + " with-asn1: " + ConvertUtils.bin2hex(b));
-				nonce = b;
-			}
 			//if(m_logger.isDebugEnabled())
 		    //	  m_logger.debug("Nonce in1: " + ConvertUtils.bin2hex(nonce) + " has-pref: " + ConvertUtils.findDigType(nonce) + " in-len: " + ((nonce != null) ? nonce.length : 0));
 			if(nonce != null && ConvertUtils.findDigType(nonce) == null && bBdoc) {
@@ -1378,7 +1369,10 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
 			}
 			if(nonce != null) {
 				ExtensionsGenerator extGen = new ExtensionsGenerator();
-		        extGen.addExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false, new DEROctetString(nonce));
+				if(bBdoc)
+					extGen.addExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false, nonce);
+				else
+					extGen.addExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false, new DEROctetString(nonce));
 		        ocspRequest.setRequestExtensions(extGen.generate());
 			}
 			GeneralName name = null;
