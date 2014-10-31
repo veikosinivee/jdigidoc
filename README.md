@@ -1,6 +1,7 @@
-JDigiDoc developers info
+# JDigiDoc developers info
 
 You need the following dependent librarys to build jdigidoc:
+
 - commons-codec-1.6.jar - http://commons.apache.org/proper/commons-codec/download_codec.cgi
 - commons-compress-1.3.jar - http://commons.apache.org/proper/commons-compress/download_compress.cgi
 - bcmail-jdk15on-151.jar - http://www.bouncycastle.org/latest_releases.html
@@ -10,13 +11,23 @@ You need the following dependent librarys to build jdigidoc:
 - iaikPkcs11Wrapper.jar - http://jce.iaik.tugraz.at/sic/Products/Core-Crypto-Toolkits/PKCS_11_Wrapper
 
 Download them all to some directory and edit build.xml entry:
-<property name="lib.dir" location="${env.HOME}/libs/jdigidoc" />
+
+    <property name="lib.dir" location="${env.HOME}/libs/jdigidoc" />
+
 to point to that directory.
 
 To build jdigidoc library use:
-ant jar
+
+    ant jar
+
 This command also build jdcerts.jar that contains addition CA certificates for
 testing environments only.
 
 To build a zip file with dependent libs for distribution use
-ant deplibs
+
+    ant deplibs
+
+## Support
+Official builds are provided through official distribution point [installer.id.ee](https://installer.id.ee). If you want support, you need to be using official builds.
+
+Source code is provided on "as is" terms with no warranty (see license for more information). Do not file Github issues with generic support requests.
