@@ -105,7 +105,7 @@
                                 <include name="*.txt" />
                         </fileset>
                 </copy>
-		<copy file="readme-devinfo.txt" todir="${tmp.dir}" />
+		<copy file="README.md" todir="${tmp.dir}" />
 		<replace file="${src.dir}/ee/sk/digidoc/Version.java" token="3.9.0" value="${env.JDD_VERSION}" />
 	</target>
 
@@ -138,7 +138,7 @@
 			use="true"
 			windowtitle="JDigiDoc API"
 			encoding="UTF-8"
-			failonerror="true"
+			failonerror="false"
 			charset="UTF-8">
 			<fileset refid="javadoc-fileset"/>
 			<doctitle><![CDATA[<h1>JDigiDoc</h1>]]></doctitle>
