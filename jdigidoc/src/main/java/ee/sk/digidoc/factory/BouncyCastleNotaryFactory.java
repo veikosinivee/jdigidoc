@@ -1156,7 +1156,7 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
                 byte[] nonce2 = getNonce(basResp, sig.getSignedDoc());
                 if(nonce1 == null || nonce2 == null || nonce1.length != nonce2.length)
                 	ok = false;
-                for(int i = 0; (nonce1 != null) && (nonce2 != null) && (i < nonce1.length); i++)
+                for(int i = 0; (nonce1 != null) && (nonce2 != null) && (i < nonce1.length) && (i < nonce2.length); i++)
                 	if(nonce1[i] != nonce2[i])
                 		ok = false;
                 // TODO: investigate further
@@ -1234,16 +1234,15 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
 				if(ext != null) {
 					if(m_logger.isDebugEnabled())
 	            	  m_logger.debug("Ext: " + ext.getExtnId() + " val-len: " + ((ext.getExtnValue() != null) ? ext.getExtnValue().getOctets().length : 0));
-	            	try {
-					  ASN1Encodable extObj = ext.getParsedValue();
+					if(ext.getExtnValue() != null && ext.getExtnValue().getOctets() != null && ext.getExtnValue().getOctets().length == 20) {
+						nonce2 = ext.getExtnValue().getOctets();
+						m_logger.debug("Raw nonce len: " + ((nonce2 != null) ? nonce2.length : 0));
+					} else {
+	            	  ASN1Encodable extObj = ext.getParsedValue();
 					  nonce2 = extObj.toASN1Primitive().getEncoded();
 					  if(extObj instanceof ASN1OctetString) 
 						nonce2 = ((ASN1OctetString)extObj).getOctets();
-					} catch(Exception ex) {
-						m_logger.debug("Error decoding nonce extension, invalid asn1: " + ex);
-						// second try if no valid asn.1 prefix
-						nonce2 = ext.getExtnValue().getOctets();
-	            	}
+					}
 				}
 			}
 			boolean bCheckOcspNonce = ConfigManager.instance().getBooleanProperty("CHECK_OCSP_NONCE", false);
