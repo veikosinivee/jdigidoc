@@ -1232,11 +1232,18 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
 			if(extOids.size() >= 1) {
 				Extension ext = basResp.getExtension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce);
 				if(ext != null) {
-					ASN1Encodable extObj = ext.getParsedValue();
-					nonce2 = extObj.toASN1Primitive().getEncoded();
-					if(extObj instanceof ASN1OctetString) {
+					if(m_logger.isDebugEnabled())
+	            	  m_logger.debug("Ext: " + ext.getExtnId() + " val-len: " + ((ext.getExtnValue() != null) ? ext.getExtnValue().getOctets().length : 0));
+	            	try {
+					  ASN1Encodable extObj = ext.getParsedValue();
+					  nonce2 = extObj.toASN1Primitive().getEncoded();
+					  if(extObj instanceof ASN1OctetString) 
 						nonce2 = ((ASN1OctetString)extObj).getOctets();
-					}
+					} catch(Exception ex) {
+						m_logger.debug("Error decoding nonce extension, invalid asn1: " + ex);
+						// second try if no valid asn.1 prefix
+						nonce2 = ext.getExtnValue().getOctets();
+	            	}
 				}
 			}
 			boolean bCheckOcspNonce = ConfigManager.instance().getBooleanProperty("CHECK_OCSP_NONCE", false);
