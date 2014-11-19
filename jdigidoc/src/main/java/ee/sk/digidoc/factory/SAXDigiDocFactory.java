@@ -339,8 +339,10 @@ public class SAXDigiDocFactory
 	private void handleSAXError(Exception err)
 		throws SAXDigiDocException
 	{
-		if(m_logger.isDebugEnabled())
+		if(m_logger.isDebugEnabled()) {
 			m_logger.debug("Handle sa err: " + err + " list: " + (m_errs != null));
+			m_logger.debug("Trace: " + ConvertUtils.getTrace(err));
+		}
 		DigiDocException err1 = null;
 		SAXDigiDocException err2 = null;
 		if(err instanceof SAXDigiDocException) {
@@ -360,6 +362,8 @@ public class SAXDigiDocFactory
 		else
 			throw err2;
 	}
+	
+	private static int nMaxCacheBytes = 1024; // * 1024; // 1MB
 	
 	/**
 	 * Reads in a DigiDoc file. One of fname or isSdoc must be given.
@@ -417,12 +421,14 @@ public class SAXDigiDocFactory
 					  (zis != null && ((ze = zis.getNextZipEntry()) != null)) ) {
 					nFil++;
 					InputStream isEntry = null;
+					File fTmp = null;
 					// read entry
 					if(zf != null) { // ZipFile
 						ze = (ZipArchiveEntry)eFiles.nextElement();
 						isEntry = zf.getInputStream(ze);
 					} else { // ZipArchiveInputStream
 						int n = 0, nTot = 0;
+						if(ze.getSize() < nMaxCacheBytes) {
 						ByteArrayOutputStream bos = new ByteArrayOutputStream();
 						byte[] data = new byte[2048];
 						while((n = zis.read(data)) > 0) {
@@ -434,6 +440,19 @@ public class SAXDigiDocFactory
 						data = bos.toByteArray();
 						bos = null;
 						isEntry = new ByteArrayInputStream(data);
+						} else {
+							fTmp = File.createTempFile("bdoc-data", ".tmp");
+							FileOutputStream fos = new FileOutputStream(fTmp);
+							byte[] data = new byte[2048];
+							while((n = zis.read(data)) > 0) {
+								fos.write(data, 0, n);
+								nTot += n;
+							}
+							if(m_logger.isDebugEnabled())
+								m_logger.debug("Read: " + nTot + " bytes from zip to: " + fTmp.getAbsolutePath());
+							fos.close();
+							isEntry = new FileInputStream(fTmp);
+						}
 					}
 					if(m_logger.isDebugEnabled())
 						m_logger.debug("Entry: " + ze.getName() + " nlen: " + ze.getName().length() + " size: " + ze.getSize() + " dir: " + ze.isDirectory() + " comp-size: " + ze.getCompressedSize());
@@ -535,6 +554,10 @@ public class SAXDigiDocFactory
 						  }
 						}
 						}
+					}
+					if(fTmp != null) {
+						fTmp.delete();
+						fTmp = null;
 					}
 				} // while zip entries
 				if(!bHasMimetype) {
