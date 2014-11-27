@@ -22,6 +22,7 @@ package ee.sk.digidoc.factory;
 import ee.sk.digidoc.*;
 import ee.sk.utils.ConvertUtils;
 import ee.sk.utils.ConfigManager;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,14 +40,18 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.TreeSet;
+
 import org.apache.commons.compress.archivers.zip.*;
 import org.xml.sax.SAXException;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
+
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
+
 import java.security.cert.X509Certificate;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -78,6 +83,7 @@ public class SAXDigiDocFactory
 	 * the collect mode
 	 */
 	private int m_nCollectMode;
+	private long nMaxBdocFilCached;
 	/** log4j logger */
 	private Logger m_logger = null;
 	/** calculation of digest */
@@ -118,6 +124,8 @@ public class SAXDigiDocFactory
 		m_elemRoot = null;
         m_elemCurrent = null;
 		m_logger = Logger.getLogger(SAXDigiDocFactory.class);
+		nMaxBdocFilCached = ConfigManager.instance().
+				getLongProperty("DIGIDOC_MAX_DATAFILE_CACHED", Long.MAX_VALUE);
 	}
 
 	/**
@@ -363,7 +371,6 @@ public class SAXDigiDocFactory
 			throw err2;
 	}
 	
-	private static int nMaxCacheBytes = 1024; // * 1024; // 1MB
 	
 	/**
 	 * Reads in a DigiDoc file. One of fname or isSdoc must be given.
@@ -397,6 +404,7 @@ public class SAXDigiDocFactory
 		ZipFile zf = null;
 		ZipArchiveInputStream zis = null;
 		ZipArchiveEntry ze = null;
+		File fTmp = null;
 		try {
 			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
@@ -421,27 +429,29 @@ public class SAXDigiDocFactory
 					  (zis != null && ((ze = zis.getNextZipEntry()) != null)) ) {
 					nFil++;
 					InputStream isEntry = null;
-					File fTmp = null;
+					
 					// read entry
 					if(zf != null) { // ZipFile
 						ze = (ZipArchiveEntry)eFiles.nextElement();
 						isEntry = zf.getInputStream(ze);
 					} else { // ZipArchiveInputStream
 						int n = 0, nTot = 0;
-						if(ze.getSize() < nMaxCacheBytes) {
-						ByteArrayOutputStream bos = new ByteArrayOutputStream();
-						byte[] data = new byte[2048];
-						while((n = zis.read(data)) > 0) {
+						if(ze.getSize() < nMaxBdocFilCached) {
+						  ByteArrayOutputStream bos = new ByteArrayOutputStream();
+						  byte[] data = new byte[2048];
+						  while((n = zis.read(data)) > 0) {
 							bos.write(data, 0, n);
 							nTot += n;
-						}
-						if(m_logger.isDebugEnabled())
+						  }
+						  if(m_logger.isDebugEnabled())
 							m_logger.debug("Read: " + nTot + " bytes from zip");
-						data = bos.toByteArray();
-						bos = null;
-						isEntry = new ByteArrayInputStream(data);
+						  data = bos.toByteArray();
+						  bos = null;
+						  isEntry = new ByteArrayInputStream(data);
 						} else {
-							fTmp = File.createTempFile("bdoc-data", ".tmp");
+							File fCacheDir = new File(ConfigManager.instance().
+				        			getStringProperty("DIGIDOC_DF_CACHE_DIR", System.getProperty("java.io.tmpdir")));
+							fTmp = File.createTempFile("bdoc-data", ".tmp", fCacheDir);
 							FileOutputStream fos = new FileOutputStream(fTmp);
 							byte[] data = new byte[2048];
 							while((n = zis.read(data)) > 0) {
@@ -611,6 +621,10 @@ public class SAXDigiDocFactory
 				zis.close();
 			  if(zf != null)
 				zf.close();
+			  if(fTmp != null) {
+					fTmp.delete();
+					fTmp = null;
+			  }
 			} catch(Exception ex) {
 				m_logger.error("Error closing streams and files: " + ex);
 			}
