@@ -1,7 +1,7 @@
 DigiDoc Java library
 --------------------
 
-JDigiDoc is a primary library for manipulating Estonian DDOC and BDOC
+JDigiDoc is a library for manipulating Estonian DDOC and BDOC
 digital signature container files.
 
 It offers the functionality for creating digitally signed files in
