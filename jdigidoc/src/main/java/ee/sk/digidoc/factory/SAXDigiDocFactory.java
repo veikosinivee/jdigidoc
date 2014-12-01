@@ -436,7 +436,7 @@ public class SAXDigiDocFactory
 						isEntry = zf.getInputStream(ze);
 					} else { // ZipArchiveInputStream
 						int n = 0, nTot = 0;
-						if(ze.getSize() < nMaxBdocFilCached || nMaxBdocFilCached == 0) {
+						if(ze.getSize() < nMaxBdocFilCached || nMaxBdocFilCached < 0) {
 						  ByteArrayOutputStream bos = new ByteArrayOutputStream();
 						  byte[] data = new byte[2048];
 						  while((n = zis.read(data)) > 0) {
