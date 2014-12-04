@@ -436,7 +436,11 @@ public class SAXDigiDocFactory
 						isEntry = zf.getInputStream(ze);
 					} else { // ZipArchiveInputStream
 						int n = 0, nTot = 0;
-						if(ze.getSize() < nMaxBdocFilCached || nMaxBdocFilCached < 0) {
+						if((ze.getName().equals(FILE_MIMETYPE) || 
+							ze.getName().equals(FILE_MANIFEST) || 
+							ze.getName().startsWith(FILE_SIGNATURES) ||
+							ze.getName().endsWith(".xml")) ||
+								(ze.getSize() < nMaxBdocFilCached && ze.getSize() >= 0)) {
 						  ByteArrayOutputStream bos = new ByteArrayOutputStream();
 						  byte[] data = new byte[2048];
 						  while((n = zis.read(data)) > 0) {
@@ -622,8 +626,8 @@ public class SAXDigiDocFactory
 			  if(zf != null)
 				zf.close();
 			  if(fTmp != null) {
-					fTmp.delete();
-					fTmp = null;
+				  fTmp.delete();
+				  fTmp = null;
 			  }
 			} catch(Exception ex) {
 				m_logger.error("Error closing streams and files: " + ex);
