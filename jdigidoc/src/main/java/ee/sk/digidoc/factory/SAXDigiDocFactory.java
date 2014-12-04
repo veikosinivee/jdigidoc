@@ -439,8 +439,8 @@ public class SAXDigiDocFactory
 						if((ze.getName().equals(FILE_MIMETYPE) || 
 							ze.getName().equals(FILE_MANIFEST) || 
 							(ze.getName().startsWith(FILE_SIGNATURES) &&
-							ze.getName().endsWith(".xml"))) ||
-								(ze.getSize() < nMaxBdocFilCached && ze.getSize() >= 0)) {
+							ze.getName().endsWith(".xml"))) || 
+							(nMaxBdocFilCached <= 0 || (ze.getSize() < nMaxBdocFilCached && ze.getSize() >= 0))) {
 						  ByteArrayOutputStream bos = new ByteArrayOutputStream();
 						  byte[] data = new byte[2048];
 						  while((n = zis.read(data)) > 0) {
