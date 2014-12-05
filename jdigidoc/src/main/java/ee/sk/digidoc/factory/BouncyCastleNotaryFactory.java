@@ -1240,8 +1240,6 @@ public class BouncyCastleNotaryFactory implements NotaryFactory
 					} else {
 	            	  ASN1Encodable extObj = ext.getParsedValue();
 					  nonce2 = extObj.toASN1Primitive().getEncoded();
-					  if(extObj instanceof ASN1OctetString) 
-						nonce2 = ((ASN1OctetString)extObj).getOctets();
 					}
 				}
 			}
