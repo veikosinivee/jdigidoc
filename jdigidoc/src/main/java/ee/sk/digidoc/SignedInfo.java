@@ -229,9 +229,10 @@ public class SignedInfo implements Serializable
         DigiDocException ex = null;
         if(str == null || 
           (!str.equals(SignedDoc.CANONICALIZATION_METHOD_20010315) && 
-           !str.equals(SignedDoc.CANONICALIZATION_METHOD_1_1)))
+           !str.equals(SignedDoc.CANONICALIZATION_METHOD_1_1) &&
+           !str.equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC)))
             ex= new DigiDocException(DigiDocException.ERR_CANONICALIZATION_METHOD, 
-                "Currently supports only Canonical XML 1.0 and 1.1", null);
+                "Currently supports only Canonical XML 1.0, 1.1 and exc", null);
         return ex;
     }
     

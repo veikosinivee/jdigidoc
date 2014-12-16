@@ -1540,14 +1540,14 @@ public class SAXDigiDocFactory
 				}
 			}
 			// <Transform>
-			if(tag.equals("Transform")) {
+			/*if(tag.equals("Transform")) {
 				String Algorithm = attrs.getValue("Algorithm");
 				if(m_doc.getFormat().equals(SignedDoc.FORMAT_BDOC) ||
 				   m_doc.getFormat().equals(SignedDoc.FORMAT_DIGIDOC_XML)) {
 				DigiDocException ex = new DigiDocException(DigiDocException.ERR_TRANSFORMS, "Transform elements are currently not supported ", null);
 				handleSAXError(ex);
 				}
-			}
+			}*/
 			// <X509SerialNumber>
 			if(tag.equals("X509SerialNumber") && m_doc != null
 				&& m_doc.getFormat().equals(SignedDoc.FORMAT_DIGIDOC_XML)) 
@@ -2086,6 +2086,61 @@ public class SAXDigiDocFactory
 		return bInfo; // default is to return original content
 	}
 	
+	private byte[] addNamespaceOnChildElems(byte[] bCanInfo, String nsPref, String nsUri)
+	{
+		byte[] bInfo = bCanInfo;
+		try {
+			String s1 = new String(bCanInfo, "UTF-8");
+			if(m_logger.isDebugEnabled())
+				m_logger.debug("AddChildNs: " + nsPref + "=" + nsUri + " Input xml:\n------\n" + s1 + "\n------\n");
+			// find boundarys of root elem
+			int p1 = s1.indexOf('>')+1;
+			int p2 = s1.lastIndexOf('<');
+			String sRest = s1.substring(p2);
+			StringBuffer sb = new StringBuffer();
+			sb.append(s1.substring(0, p1));
+			int p3 = p1, p4 = 0, p5 = 0, p6 = 0;
+			do {
+				boolean bCopy = true;
+				p4 = s1.indexOf('<', p3);
+				// possible whitespace
+				if(p4 > p3+1) 
+					sb.append(s1.substring(p3, p4));
+				p3 = p4;
+				p4 = s1.indexOf('>', p3) + 1;
+				if(s1.charAt(p3) == '<' && s1.charAt(p3+1) != '/') {
+					p5 = s1.indexOf(':', p3);
+					if(p5 > p3 && p5 < p4) {
+						String pref = s1.substring(p3+1, p5);
+						if(pref != null && pref.equals(nsPref)) {
+							p6 = s1.indexOf(' ', p5);
+							if(p6 > p4)
+								p6 = p4 - 1;
+							sb.append(s1.substring(p3, p6));
+							sb.append(" xmlns:");
+							sb.append(nsPref);
+							sb.append("=\"");
+							sb.append(nsUri);
+							sb.append("\"");
+							bCopy = false;
+							sb.append(s1.substring(p6, p4));
+						} 
+					}
+				} 
+				if(bCopy) 
+					sb.append(s1.substring(p3, p4));
+				if(p4 > 0 && p4 < p2)
+					p3 = p4;
+			} while (p4 > 0 && p4 < p2);
+			sb.append(sRest);
+			bInfo = sb.toString().getBytes("UTF-8");
+			if(m_logger.isDebugEnabled())
+				m_logger.debug("Modified xml:\n------\n" + sb.toString() + "\n------\n");
+		} catch(Exception ex) {
+			m_logger.error("Error adding namespaces: " + ex);
+		}
+		return bInfo; // default is to return original content
+	}
 	
 	/**
 	 * End Element handler
@@ -2222,9 +2277,11 @@ public class SAXDigiDocFactory
 				if(m_doc.getFormat().equals(SignedDoc.FORMAT_SK_XML)) {
 					bCanSI = sSigInf.getBytes();
 				} else {
-				CanonicalizationFactory canFac = ConfigManager.instance().getCanonicalizationFactory();
-				bCanSI = canFac.canonicalize(ConvertUtils.str2data(sSigInf, "UTF-8"),
-						SignedDoc.CANONICALIZATION_METHOD_20010315);
+				  CanonicalizationFactory canFac = ConfigManager.instance().getCanonicalizationFactory();
+				  if(si.getCanonicalizationMethod().equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC))
+					bCanSI = canFac.canonicalize(ConvertUtils.str2data(sSigInf, "UTF-8"), SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC);
+				  else
+					bCanSI = canFac.canonicalize(ConvertUtils.str2data(sSigInf, "UTF-8"), SignedDoc.CANONICALIZATION_METHOD_20010315);
 				}
 				si.setOrigDigest(SignedDoc.digestOfType(bCanSI, 
 						(m_doc.getFormat().equals(SignedDoc.FORMAT_BDOC) ? 
@@ -2239,6 +2296,9 @@ public class SAXDigiDocFactory
 						bEtsiNs = true;
 					if(m_nsAsicPref != null && m_nsAsicPref.length() > 0)
 						bAsicNs = true;
+					if(si.getCanonicalizationMethod().equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC)) {
+						bAsicNs = false;
+					}
 					bCanSI = addNamespaces(bCanSI, true, bEtsiNs, m_nsDsPref, m_nsXadesPref, bAsicNs, m_nsAsicPref);
 					si.setOrigXml(bCanSI);
 					String sDigType = ConfigManager.sigMeth2Type(si.getSignatureMethod());
@@ -2264,6 +2324,7 @@ public class SAXDigiDocFactory
 			//debugWriteFile("SigProps-orig.xml", m_sbCollectChars.toString());
 			try {
 				Signature sig = getLastSignature();
+				SignedInfo si = sig.getSignedInfo();
 				SignedProperties sp = sig.getSignedProperties();
 				String sigProp = m_sbCollectChars.toString();
 				//debugWriteFile("SigProp1.xml", sigProp);
@@ -2273,9 +2334,14 @@ public class SAXDigiDocFactory
 					m_logger.debug("SigProp0:\n------\n" + sigProp + "\n------" + " len: " + 
 							sigProp.length() + " sha1 HASH0: " + Base64Util.encode(bDig0));
 				CanonicalizationFactory canFac = ConfigManager.instance().getCanonicalizationFactory();
-				byte[] bCanProp = canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_20010315);
+				byte[] bCanProp = null;
+				if(si.getCanonicalizationMethod().equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC))
+					bCanProp = canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC);
+				  else
+					  bCanProp = canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_20010315);
+				//canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_20010315);
 				if(m_logger.isDebugEnabled())
-					m_logger.debug("SigProp1:\n------\n" + new String(bCanProp, "UTF-8") + "\n------" + " len: " + bCanProp.length);
+					m_logger.debug("SigProp can:\n------\n" + new String(bCanProp, "UTF-8") + "\n------" + " len: " + bCanProp.length);
 				
 				if(m_doc.getFormat().equals(SignedDoc.FORMAT_BDOC)) {
 					boolean bNeedDsNs = false;
@@ -2288,13 +2354,19 @@ public class SAXDigiDocFactory
 						bEtsiNs = true;
 					if(m_nsAsicPref != null && m_nsAsicPref.length() > 0)
 						bAsicNs = true;
+					if(si.getCanonicalizationMethod().equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC)) {
+						bAsicNs = false;
+						bNeedDsNs = false;
+					}
 					bCanProp = addNamespaces(bCanProp, bNeedDsNs, bEtsiNs, m_nsDsPref, m_nsXadesPref, bAsicNs, m_nsAsicPref);
+					if(si.getCanonicalizationMethod().equals(SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC)) 
+						bCanProp = addNamespaceOnChildElems(bCanProp, m_nsDsPref, xmlnsDs);
 					Reference spRef = sig.getSignedInfo().getReferenceForSignedProperties(sp);
 					if(spRef != null) {
 					  String sDigType = ConfigManager.digAlg2Type(spRef.getDigestAlgorithm());
 					  sp.setOrigDigest(SignedDoc.digestOfType(bCanProp, sDigType));
 					  if(m_logger.isDebugEnabled())
-						m_logger.debug("\nHASH: " + Base64Util.encode(sp.getOrigDigest()));
+						m_logger.debug("\nHASH: " + Base64Util.encode(sp.getOrigDigest()) + " REF-HASH: " + Base64Util.encode(spRef.getDigestValue()));
 					}
 				}
 				m_sbCollectChars = null; // stop collecting
@@ -2307,15 +2379,16 @@ public class SAXDigiDocFactory
 						sp.setCertId(sig.getId() + "-CERTINFO");
 					sp.setCertSerial(cid.getSerial());
 					sp.setCertDigestAlgorithm(cid.getDigestAlgorithm());
-					if(cid.getDigestValue() != null) {
+					if(cid.getDigestValue() != null) 
 						sp.setCertDigestValue(cid.getDigestValue());
-					} 
+					if(m_logger.isDebugEnabled())
+						m_logger.debug("CID: " + cid.getId() + " ser: " + cid.getSerial() + " alg: " + cid.getDigestAlgorithm());
 				}
-				String sDigType1 = ConfigManager.digAlg2Type(sp.getCertDigestAlgorithm());
+				/*String sDigType1 = ConfigManager.digAlg2Type(sp.getCertDigestAlgorithm());
 				sp.setOrigDigest(SignedDoc.digestOfType(bCanProp, sDigType1));
 				if(m_logger.isDebugEnabled())
 					m_logger.debug("SigProp2:\n------\n" + new String(bCanProp) + "\n------\n"  + 
-							" len: " + bCanProp.length + " digtype: " + sDigType1 + " HASH: " + Base64Util.encode(sp.getOrigDigest()));
+							" len: " + bCanProp.length + " digtype: " + sDigType1 + " HASH: " + Base64Util.encode(sp.getOrigDigest()));*/
 			} catch (DigiDocException ex) {
 				handleSAXError(ex);
 			} catch(UnsupportedEncodingException ex) {

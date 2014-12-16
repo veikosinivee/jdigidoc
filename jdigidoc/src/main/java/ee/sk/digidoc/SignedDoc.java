@@ -146,6 +146,7 @@ public class SignedDoc implements Serializable
     public static final String CANONICALIZATION_METHOD_20010315 = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315";
     /** canonical xml 1.1 */
     public static final String CANONICALIZATION_METHOD_1_1 = "http://www.w3.org/2006/12/xml-c14n11";
+    public static final String CANONICALIZATION_METHOD_2010_10_EXC = "http://www.w3.org/2001/10/xml-exc-c14n#";
     public static final String TRANSFORM_20001026 = "http://www.w3.org/TR/2000/CR-xml-c14n-20001026";
     /** the only supported signature method is RSA-SHA1 */
     public static final String RSA_SHA1_SIGNATURE_METHOD = "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
