@@ -2339,10 +2339,8 @@ public class SAXDigiDocFactory
 					bCanProp = canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_2010_10_EXC);
 				  else
 					  bCanProp = canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_20010315);
-				//canFac.canonicalize(bSigProp, SignedDoc.CANONICALIZATION_METHOD_20010315);
 				if(m_logger.isDebugEnabled())
 					m_logger.debug("SigProp can:\n------\n" + new String(bCanProp, "UTF-8") + "\n------" + " len: " + bCanProp.length);
-				
 				if(m_doc.getFormat().equals(SignedDoc.FORMAT_BDOC)) {
 					boolean bNeedDsNs = false;
 					String st1 = new String(bCanProp);
@@ -2384,11 +2382,14 @@ public class SAXDigiDocFactory
 					if(m_logger.isDebugEnabled())
 						m_logger.debug("CID: " + cid.getId() + " ser: " + cid.getSerial() + " alg: " + cid.getDigestAlgorithm());
 				}
-				/*String sDigType1 = ConfigManager.digAlg2Type(sp.getCertDigestAlgorithm());
-				sp.setOrigDigest(SignedDoc.digestOfType(bCanProp, sDigType1));
-				if(m_logger.isDebugEnabled())
+				if(m_doc.getFormat().equals(SignedDoc.FORMAT_DIGIDOC_XML) || 
+					m_doc.getFormat().equals(SignedDoc.FORMAT_SK_XML)) {
+				  String sDigType1 = ConfigManager.digAlg2Type(sp.getCertDigestAlgorithm());
+				  sp.setOrigDigest(SignedDoc.digestOfType(bCanProp, sDigType1));
+				  if(m_logger.isDebugEnabled())
 					m_logger.debug("SigProp2:\n------\n" + new String(bCanProp) + "\n------\n"  + 
-							" len: " + bCanProp.length + " digtype: " + sDigType1 + " HASH: " + Base64Util.encode(sp.getOrigDigest()));*/
+							" len: " + bCanProp.length + " digtype: " + sDigType1 + " HASH: " + Base64Util.encode(sp.getOrigDigest()));
+				}
 			} catch (DigiDocException ex) {
 				handleSAXError(ex);
 			} catch(UnsupportedEncodingException ex) {
