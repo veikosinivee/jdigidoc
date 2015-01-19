@@ -153,7 +153,7 @@
                 </javac>
 	</target>
 
-	<target name="javadoc" depends="distjar" description="Generate API documentation">
+	<target name="javadoc" depends="distjar" description="Generate API documentation" >
 		<javadoc
 			classpathref="master-classpath"
 			destdir="${javadoc.gen.dir}"
@@ -187,7 +187,7 @@
 		</jar>
 	</target>
 
-	<target name="dist-jar" depends="dist-compile,jdcerts" description="Create a JAR file.">
+	<target name="dist-jar" depends="dist-compile" description="Create a JAR file.">
                 <delete file="${tmp.dir}/${ant.project.name}.jar" failonerror="false"/>
                 <jar destfile="${tmp.dir}/${ant.project.name}.jar" update="false">
                         <fileset dir="${classes.dir}">
