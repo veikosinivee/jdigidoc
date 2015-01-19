@@ -13,6 +13,7 @@ DigiDoc documents and the JDigiDoc library implement a subset of XML-DSIG and ET
 
 ### Build status
   * Travis - [![Build Status](https://travis-ci.org/veikosinivee/jdigidoc.png?branch=master)](https://travis-ci.org/veikosinivee/jdigidoc)
+  * Coverity - [![Coverity status](https://scan.coverity.com/projects/931/badge.svg?flat=1)](https://scan.coverity.com/projects/931/)
 
 Building with Maven
 -------------------
