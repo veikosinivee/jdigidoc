@@ -12,7 +12,7 @@ DigiDoc documents are XML files based on the international standards XML-DSIG, E
 DigiDoc documents and the JDigiDoc library implement a subset of XML-DSIG and ETSI TS 101 903.
 
 ### Build status
-  * Travis - [![Build Status](https://travis-ci.org/veikosinivee/jdigidoc?branch=master)](https://travis-ci.org/veikosinivee/jdigidoc)
+  * Travis - [![Build Status](https://travis-ci.org/veikosinivee/jdigidoc.png?branch=master)](https://travis-ci.org/veikosinivee/jdigidoc)
 
 Building with Maven
 -------------------
