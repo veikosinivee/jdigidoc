@@ -22,6 +22,13 @@
 		<pathelement location="${env.JAVA_HOME}/lib/tools.jar" />
 	</path>
 
+	<path id="dist-classpath">
+                <fileset dir="${dlib.dir}">
+                        <include name="*.jar" />
+                </fileset>
+                <pathelement path="${classes.dir}" />
+        </path>
+
         <patternset id="jar.patternset">
                 <include name="**/*.*" />
         </patternset>
@@ -88,7 +95,7 @@
 		<get src="http://www.bouncycastle.org/download/bcpkix-jdk15on-151.jar" dest="${dlib.dir}/bcpkix-jdk15on-151.jar" verbose="true" />
 		<get src="http://repo1.maven.org/maven2/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" dest="${dlib.dir}/commons-codec-1.6.jar" verbose="true" />
 		<get src="http://central.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5.jar" dest="${dlib.dir}/commons-compress-1.5.jar" verbose="true" />
-		<get src="http://central.maven.org/maven2/ant/ant-jakarta-log4j/1.6.1/ant-jakarta-log4j-1.6.1.jar" dest="${dlib.dir}/ant-jakarta-log4j-1.6.1.jar" verbose="true" />
+		<get src="http://central.maven.org/maven2/log4j/log4j/1.2.7/log4j-1.2.7.jar" dest="${dlib.dir}/log4j-1.2.7.jar" verbose="true" />
 		<get src="http://maven.petalslink.com/others/es/mityc/jumbo/adsi/iaikPkcs11Wrapper/1.1.7/iaikPkcs11Wrapper-1.1.7.jar" dest="${dlib.dir}/iaikPkcs11Wrapper-1.1.7.jar" verbose="true" />
 	</target>
 
@@ -141,7 +148,7 @@
                         deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
                         <src path="${src.dir}" />
                         <src path="${test.dir}" />
-                        <classpath refid="master-classpath" />
+                        <classpath refid="dist-classpath" />
                         <compilerarg line="-Xlint:unchecked" />
                 </javac>
 	</target>
