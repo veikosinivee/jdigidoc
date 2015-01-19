@@ -7,6 +7,7 @@
     	<property file="version.properties" />
 	<property environment="env" />
 	<property name="lib.dir" location="${env.HOME}/libs/jdigidoc" />
+	<property name="dlib.dir" location="lib" />
 	<property name="tmp.dir" location="tmp" />
 	<property name="doc.dir" location="doc" />
 	<property name="classes.dir" location="${tmp.dir}/classes" />
@@ -76,6 +77,23 @@
 
 	<target name="clean" description="Remove generated files">
 		<delete dir="${tmp.dir}"/>
+		<delete dir="${dlib.dir}"/>
+	</target>
+
+	<target name="dist-libs" description="Downloading dependent libs for dist">
+		<mkdir dir="${dlib.dir}" />
+		<get src="http://www.bouncycastle.org/download/bcprov-jdk15on-151.jar" dest="${dlib.dir}/bcprov-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcmail-jdk15on-151.jar" dest="${dlib.dir}/bcmail-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcpg-jdk15on-151.jar" dest="${dlib.dir}/bcpg-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcpkix-jdk15on-151.jar" dest="${dlib.dir}/bcpkix-jdk15on-151.jar" verbose="true" />
+		<get src="http://repo1.maven.org/maven2/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" dest="${dlib.dir}/commons-codec-1.6.jar" verbose="true" />
+		<get src="http://central.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5.jar" dest="${dlib.dir}/commons-compress-1.5.jar" verbose="true" />
+		<get src="http://central.maven.org/maven2/ant/ant-jakarta-log4j/1.6.1/ant-jakarta-log4j-1.6.1.jar" dest="${dlib.dir}/ant-jakarta-log4j-1.6.1.jar" verbose="true" />
+		<get src="http://maven.petalslink.com/others/es/mityc/jumbo/adsi/iaikPkcs11Wrapper/1.1.7/iaikPkcs11Wrapper-1.1.7.jar" dest="${dlib.dir}/iaikPkcs11Wrapper-1.1.7.jar" verbose="true" />
+	</target>
+
+        <target name="verchg" description="Set version number">
+	  <replace file="${src.dir}/ee/sk/digidoc/Version.java" token="3.9.0" value="${env.JDD_VERSION}" />	
 	</target>
 
 	<target name="init" description="Make neccessary preparations">
@@ -104,7 +122,6 @@
                         </fileset>
                 </copy>
 		<copy file="README.md" todir="${tmp.dir}" />
-		<replace file="${src.dir}/ee/sk/digidoc/Version.java" token="3.9.0" value="${env.JDD_VERSION}" />
 	</target>
 
 	<target name="whenJava">
@@ -117,7 +134,7 @@
 		description="Compile, for those of us used to 'build' ;)"/>
 	
 	<target name="compile"  description="Compile main source tree java files"
-		depends="init">
+		depends="init,verchg">
 		<javac destdir="${classes.dir}" target="1.5" debug="true"
 			deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
 			<src path="${src.dir}" />
@@ -125,6 +142,16 @@
 			<classpath refid="master-classpath" />
 			<compilerarg line="-Xlint:unchecked" />
 		</javac>
+	</target>
+
+	<target name="dist-compile" description="Compile with downloading jars and without ver change" depends="dist-libs,init">
+		<javac destdir="${classes.dir}" target="1.5" debug="true"
+                        deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
+                        <src path="${src.dir}" />
+                        <src path="${test.dir}" />
+                        <classpath refid="master-classpath" />
+                        <compilerarg line="-Xlint:unchecked" />
+                </javac>
 	</target>
 
 	<target name="javadoc" depends="distjar" description="Generate API documentation">
@@ -160,6 +187,16 @@
 			<fileset refid="sk-prod-certs" />
 		</jar>
 	</target>
+
+	<target name="dist-jar" depends="dist-compile,jdcerts" description="Create a JAR file.">
+                <delete file="${tmp.dir}/${ant.project.name}.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/${ant.project.name}.jar" update="false">
+                        <fileset dir="${classes.dir}">
+                                <include name="**/*.*" />
+                        </fileset>
+                        <fileset refid="sk-prod-certs" />
+                </jar>
+        </target>
 
         <target name="util-jar" depends="distjar">
                 <jar destfile="${tmp.dir}/jdigidocutil-${env.JDD_VERSION}.jar">
