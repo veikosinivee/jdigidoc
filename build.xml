@@ -96,32 +96,24 @@
 	  <replace file="${src.dir}/ee/sk/digidoc/Version.java" token="3.9.0" value="${env.JDD_VERSION}" />	
 	</target>
 
-	<target name="init" description="Make neccessary preparations">
+	<target name="init" description="Make init without local libs copying">
 		<mkdir dir="${tmp.dir}" />
-		<mkdir dir="${classes.dir}" />
-		<mkdir dir="${javadoc.gen.dir}" />
-		<mkdir dir="${tmp.dir}/lib" />
-		<mkdir dir="${tmp.dir}/doc" />
-		<copy todir="${tmp.dir}">
-			<fileset dir="${resources.dir}">
-			  <include name="jdigidoc.cfg" />
-			  <include name="log4j.properties" />
-			</fileset>
-		</copy>
+                <mkdir dir="${classes.dir}" />
+                <mkdir dir="${javadoc.gen.dir}" />
+                <mkdir dir="${tmp.dir}/lib" />
+                <mkdir dir="${tmp.dir}/doc" />
+                <copy todir="${tmp.dir}">
+                        <fileset dir="${resources.dir}">
+                          <include name="jdigidoc.cfg" />
+                          <include name="log4j.properties" />
+                        </fileset>
+                </copy>
+	</target>
+
+	<target name="init-libs" description="Make neccessary preparations">
 		<copy todir="${tmp.dir}/lib">
 			<fileset refid="jd-libs-and-bin"/>
 		</copy>
-		<copy todir="${tmp.dir}/doc">
-			<fileset dir="${doc.dir}">
-				<include name="*.*" />
-			</fileset>
-		</copy>
-		<copy todir="${tmp.dir}">
-                        <fileset dir="${jdigidoc.dir}">
-                                <include name="*.txt" />
-                        </fileset>
-                </copy>
-		<copy file="README.md" todir="${tmp.dir}" />
 	</target>
 
 	<target name="whenJava">
@@ -134,7 +126,7 @@
 		description="Compile, for those of us used to 'build' ;)"/>
 	
 	<target name="compile"  description="Compile main source tree java files"
-		depends="init,verchg">
+		depends="init,init-libs,verchg">
 		<javac destdir="${classes.dir}" target="1.5" debug="true"
 			deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
 			<src path="${src.dir}" />
