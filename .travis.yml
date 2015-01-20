@@ -2,4 +2,4 @@ language: java
 jdk:
    - oraclejdk7
 
-script: ant dist-jar
+script: ant dist-util-jar

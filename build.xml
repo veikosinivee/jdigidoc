@@ -197,6 +197,15 @@
                 </jar>
         </target>
 
+	<target name="dist-util-jar" depends="dist-jar">
+                <jar destfile="${tmp.dir}/jdigidocutil.jar">
+                <manifest>
+                        <attribute name="Class-Path" value="esteidtestcerts.jar lib/esteidtestcerts.jar jdigidoc-${env.JDD_VERSION}.jar lib/bcmail-jdk15on-151.jar lib/bcpkix-jdk15on-151.jar lib/bcprov-jdk15on-151.jar lib/commons-codec-1.6.jar lib/log4j-1.2.7.jar lib/commons-compress-1.5.jar lib/iaikPkcs11Wrapper-1.1.7.jar ."/>
+                        <attribute name="Main-Class" value="ee.sk.test.jdigidoc"/>
+                </manifest>
+                </jar>
+        </target>
+
         <target name="util-jar" depends="distjar">
                 <jar destfile="${tmp.dir}/jdigidocutil-${env.JDD_VERSION}.jar">
                 <manifest>
