@@ -197,7 +197,14 @@
                 </jar>
         </target>
 
-	<target name="dist-util-jar" depends="dist-jar">
+	<target name="esteidtestcerts" description="Create a test esteid certs jar">
+                <delete file="${tmp.dir}/esteidtestcerts.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/esteidtestcerts.jar" update="false">
+                        <fileset refid="sk-test-certs" />
+                </jar>
+        </target>
+
+	<target name="dist-util-jar" depends="esteidtestcerts,dist-jar">
                 <jar destfile="${tmp.dir}/jdigidocutil.jar">
                 <manifest>
                         <attribute name="Class-Path" value="esteidtestcerts.jar lib/esteidtestcerts.jar jdigidoc-${env.JDD_VERSION}.jar lib/bcmail-jdk15on-151.jar lib/bcpkix-jdk15on-151.jar lib/bcprov-jdk15on-151.jar lib/commons-codec-1.6.jar lib/log4j-1.2.7.jar lib/commons-compress-1.5.jar lib/iaikPkcs11Wrapper-1.1.7.jar ."/>
