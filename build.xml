@@ -123,6 +123,15 @@
 		</copy>
 	</target>
 
+	<target name="dist-init-libs" description="">
+		<copy todir="${tmp.dir}/lib">
+			<fileset dir="${dlib.dir}" />
+                </copy>
+		<copy todir="${tmp.dir}/doc">
+                        <fileset dir="${doc.dir}" />
+                </copy>
+        </target>
+
 	<target name="whenJava">
 		<condition property="caller.java" value="true">
 			<contains string="${caller.name}" substring=".java" casesensitive="false" />
@@ -143,7 +152,7 @@
 		</javac>
 	</target>
 
-	<target name="dist-compile" description="Compile with downloading jars and without ver change" depends="dist-libs,init">
+	<target name="dist-compile" description="Compile with downloading jars and without ver change" depends="dist-libs,init,dist-init-libs">
 		<javac destdir="${classes.dir}" target="1.5" debug="true"
                         deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
                         <src path="${src.dir}" />
@@ -169,6 +178,23 @@
 		</javadoc>
 		<zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-javadoc.zip"/>
 	</target>
+
+	<target name="dist-javadoc" depends="dist-compile" description="Generate API documentation" >
+                <javadoc
+                        classpathref="master-classpath"
+                        destdir="${javadoc.gen.dir}"
+                        author="true"
+                        version="true"
+                        use="true"
+                        windowtitle="JDigiDoc API"
+                        encoding="UTF-8"
+                        failonerror="false"
+                        charset="UTF-8">
+                        <fileset refid="javadoc-fileset"/>
+                        <doctitle><![CDATA[<h1>JDigiDoc</h1>]]></doctitle>
+                </javadoc>
+                <zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-javadoc.zip"/>
+        </target>
 	
 	<target name="jdcerts" depends="compile" description="Create a JAR file.">
 		<delete file="${tmp.dir}/jdcerts.jar" failonerror="false"/>
@@ -188,8 +214,8 @@
 	</target>
 
 	<target name="dist-jar" depends="dist-compile" description="Create a JAR file.">
-                <delete file="${tmp.dir}/${ant.project.name}.jar" failonerror="false"/>
-                <jar destfile="${tmp.dir}/${ant.project.name}.jar" update="false">
+                <delete file="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" update="false">
                         <fileset dir="${classes.dir}">
                                 <include name="**/*.*" />
                         </fileset>
@@ -205,12 +231,22 @@
         </target>
 
 	<target name="dist-util-jar" depends="esteidtestcerts,dist-jar">
-                <jar destfile="${tmp.dir}/jdigidocutil.jar">
+                <jar destfile="${tmp.dir}/jdigidocutil-${env.JDD_VERSION}.jar">
                 <manifest>
                         <attribute name="Class-Path" value="esteidtestcerts.jar lib/esteidtestcerts.jar jdigidoc-${env.JDD_VERSION}.jar lib/bcmail-jdk15on-151.jar lib/bcpkix-jdk15on-151.jar lib/bcprov-jdk15on-151.jar lib/commons-codec-1.6.jar lib/log4j-1.2.7.jar lib/commons-compress-1.5.jar lib/iaikPkcs11Wrapper-1.1.7.jar ."/>
                         <attribute name="Main-Class" value="ee.sk.test.jdigidoc"/>
                 </manifest>
                 </jar>
+        </target>
+
+	<target name="dist-zip" depends="source,dist-javadoc,dist-util-jar">
+                <delete dir="${classes.dir}"/>
+                <delete dir="${javadoc.gen.dir}"/>
+                <zip destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.zip">
+                <fileset dir="${tmp.dir}">
+                        <include name="**/*.*" />
+                </fileset>
+                </zip>
         </target>
 
         <target name="util-jar" depends="distjar">
