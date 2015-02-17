@@ -2,4 +2,4 @@ language: java
 jdk:
    - oraclejdk7
 
-script: ant dist-zip
+script: ant -buildfile travis-build.xml travis-zip 

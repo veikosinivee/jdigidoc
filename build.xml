@@ -22,22 +22,11 @@
 		<pathelement location="${env.JAVA_HOME}/lib/tools.jar" />
 	</path>
 
-	<path id="dist-classpath">
-                <fileset dir="${dlib.dir}">
-                        <include name="*.jar" />
-                </fileset>
-                <pathelement path="${classes.dir}" />
-        </path>
-
         <patternset id="jar.patternset">
                 <include name="**/*.*" />
         </patternset>
 
 	<!-- fileset used to generate javadoc for client.jar -->
-	<fileset dir="${src.dir}" id="javadoc-fileset">
-		<patternset refid="jar.patternset" />
-	</fileset>
-
 	<fileset dir="${src.dir}" id="javadoc-fileset">
 		<patternset refid="jar.patternset" />
 	</fileset>
@@ -84,23 +73,10 @@
 
 	<target name="clean" description="Remove generated files">
 		<delete dir="${tmp.dir}"/>
-		<delete dir="${dlib.dir}"/>
-	</target>
-
-	<target name="dist-libs" description="Downloading dependent libs for dist">
-		<mkdir dir="${dlib.dir}" />
-		<get src="http://www.bouncycastle.org/download/bcprov-jdk15on-151.jar" dest="${dlib.dir}/bcprov-jdk15on-151.jar" verbose="true" />
-		<get src="http://www.bouncycastle.org/download/bcmail-jdk15on-151.jar" dest="${dlib.dir}/bcmail-jdk15on-151.jar" verbose="true" />
-		<get src="http://www.bouncycastle.org/download/bcpg-jdk15on-151.jar" dest="${dlib.dir}/bcpg-jdk15on-151.jar" verbose="true" />
-		<get src="http://www.bouncycastle.org/download/bcpkix-jdk15on-151.jar" dest="${dlib.dir}/bcpkix-jdk15on-151.jar" verbose="true" />
-		<get src="http://repo1.maven.org/maven2/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" dest="${dlib.dir}/commons-codec-1.6.jar" verbose="true" />
-		<get src="http://central.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5.jar" dest="${dlib.dir}/commons-compress-1.5.jar" verbose="true" />
-		<get src="http://central.maven.org/maven2/log4j/log4j/1.2.7/log4j-1.2.7.jar" dest="${dlib.dir}/log4j-1.2.7.jar" verbose="true" />
-		<get src="http://maven.petalslink.com/others/es/mityc/jumbo/adsi/iaikPkcs11Wrapper/1.1.7/iaikPkcs11Wrapper-1.1.7.jar" dest="${dlib.dir}/iaikPkcs11Wrapper-1.1.7.jar" verbose="true" />
 	</target>
 
         <target name="verchg" description="Set version number">
-	  <replace file="${src.dir}/ee/sk/digidoc/Version.java" token="3.9.0" value="${env.JDD_VERSION}" />	
+	  <replace file="${src.dir}/ee/sk/digidoc/Version.java" token="LIB_VERSION" value="LIB_VERSION = &quot;${env.JDD_VERSION}&quot;; // " />	
 	</target>
 
 	<target name="init" description="Make init without local libs copying">
@@ -123,15 +99,6 @@
 		</copy>
 	</target>
 
-	<target name="dist-init-libs" description="">
-		<copy todir="${tmp.dir}/lib">
-			<fileset dir="${dlib.dir}" />
-                </copy>
-		<copy todir="${tmp.dir}/doc">
-                        <fileset dir="${doc.dir}" />
-                </copy>
-        </target>
-
 	<target name="whenJava">
 		<condition property="caller.java" value="true">
 			<contains string="${caller.name}" substring=".java" casesensitive="false" />
@@ -152,16 +119,6 @@
 		</javac>
 	</target>
 
-	<target name="dist-compile" description="Compile with downloading jars and without ver change" depends="dist-libs,init,dist-init-libs">
-		<javac destdir="${classes.dir}" target="1.5" debug="true"
-                        deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
-                        <src path="${src.dir}" />
-                        <src path="${test.dir}" />
-                        <classpath refid="dist-classpath" />
-                        <compilerarg line="-Xlint:unchecked" />
-                </javac>
-	</target>
-
 	<target name="javadoc" depends="distjar" description="Generate API documentation" >
 		<javadoc
 			classpathref="master-classpath"
@@ -179,31 +136,7 @@
 		<zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-javadoc.zip"/>
 	</target>
 
-	<target name="dist-javadoc" depends="dist-compile" description="Generate API documentation" >
-                <javadoc
-                        classpathref="dist-classpath"
-                        destdir="${javadoc.gen.dir}"
-                        author="true"
-                        version="true"
-                        use="true"
-                        windowtitle="JDigiDoc API"
-                        encoding="UTF-8"
-                        failonerror="false"
-                        charset="UTF-8">
-                        <fileset refid="javadoc-fileset"/>
-                        <doctitle><![CDATA[<h1>JDigiDoc</h1>]]></doctitle>
-                </javadoc>
-                <zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-javadoc.zip"/>
-        </target>
-	
-	<target name="jdcerts" depends="compile" description="Create a JAR file.">
-		<delete file="${tmp.dir}/jdcerts.jar" failonerror="false"/>
-		<jar destfile="${tmp.dir}/jdcerts.jar" update="false">
-			<fileset refid="sk-test-certs" />
-		</jar>
-	</target>
-	
-	<target name="jar" depends="compile,jdcerts" description="Create a JAR file.">
+	<target name="jar" depends="compile,esteidtestcerts" description="Create a JAR file.">
 		<delete file="${tmp.dir}/${ant.project.name}.jar" failonerror="false"/>
 		<jar destfile="${tmp.dir}/${ant.project.name}.jar" update="false">
 			<fileset dir="${classes.dir}">
@@ -213,40 +146,11 @@
 		</jar>
 	</target>
 
-	<target name="dist-jar" depends="dist-compile" description="Create a JAR file.">
-                <delete file="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" failonerror="false"/>
-                <jar destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" update="false">
-                        <fileset dir="${classes.dir}">
-                                <include name="**/*.*" />
-                        </fileset>
-                        <fileset refid="sk-prod-certs" />
-                </jar>
-        </target>
-
 	<target name="esteidtestcerts" description="Create a test esteid certs jar">
                 <delete file="${tmp.dir}/esteidtestcerts.jar" failonerror="false"/>
                 <jar destfile="${tmp.dir}/esteidtestcerts.jar" update="false">
                         <fileset refid="sk-test-certs" />
                 </jar>
-        </target>
-
-	<target name="dist-util-jar" depends="esteidtestcerts,dist-jar">
-                <jar destfile="${tmp.dir}/jdigidocutil-${env.JDD_VERSION}.jar">
-                <manifest>
-                        <attribute name="Class-Path" value="esteidtestcerts.jar lib/esteidtestcerts.jar jdigidoc-${env.JDD_VERSION}.jar lib/bcmail-jdk15on-151.jar lib/bcpkix-jdk15on-151.jar lib/bcprov-jdk15on-151.jar lib/commons-codec-1.6.jar lib/log4j-1.2.7.jar lib/commons-compress-1.5.jar lib/iaikPkcs11Wrapper-1.1.7.jar ."/>
-                        <attribute name="Main-Class" value="ee.sk.test.jdigidoc"/>
-                </manifest>
-                </jar>
-        </target>
-
-	<target name="dist-zip" depends="source,dist-javadoc,dist-util-jar">
-                <delete dir="${classes.dir}"/>
-                <delete dir="${javadoc.gen.dir}"/>
-                <zip destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.zip">
-                <fileset dir="${tmp.dir}">
-                        <include name="**/*.*" />
-                </fileset>
-                </zip>
         </target>
 
         <target name="util-jar" depends="distjar">
