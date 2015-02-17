@@ -1,0 +1,214 @@
+<project name="JDigiDoc" basedir="." default="travis-compile">
+	<property name="jdigidoc.dir" location="jdigidoc" />
+	<property name="src.dir" location="jdigidoc/src/main/java" />
+	<property name="test.dir" location="jdigidoc/src/test/java" />
+	<property name="resources.dir" location="jdigidoc/src/main/resources" />
+	<property name="certs.dir" location="jdigidoc/src/main/resources/certs" />
+    	<property file="version.properties" />
+	<property environment="env" />
+	<property name="lib.dir" location="${env.HOME}/libs/jdigidoc" />
+	<property name="dlib.dir" location="lib" />
+	<property name="tmp.dir" location="tmp" />
+	<property name="doc.dir" location="doc" />
+	<property name="classes.dir" location="${tmp.dir}/classes" />
+	<property name="javadoc.gen.dir" location="${tmp.dir}/javadoc" />
+	<property name="${env.JDD_VERSION}" value="3.10.0-beeta3" />
+
+
+	<path id="travis-classpath">
+                <fileset dir="${dlib.dir}">
+                        <include name="*.jar" />
+                </fileset>
+                <pathelement path="${classes.dir}" />
+        </path>
+
+        <patternset id="jar.patternset">
+                <include name="**/*.*" />
+        </patternset>
+
+	<!-- fileset used to generate javadoc for client.jar -->
+	<fileset dir="${src.dir}" id="javadoc-fileset">
+		<patternset refid="jar.patternset" />
+	</fileset>
+
+	<fileset dir="${src.dir}" id="javadoc-fileset">
+		<patternset refid="jar.patternset" />
+	</fileset>
+
+  	<fileset dir="${resources.dir}" id="sk-prod-certs">
+		<include name="certs/EID-SK*.crt" />
+		<include name="certs/ESTEID-SK*.crt" />
+		<include name="certs/JUUR-SK.crt" />
+		<include name="certs/KLASS3-SK*.crt" />
+		<include name="certs/EECCRCA.crt" />
+		<include name="certs/SK OCSP 2011.crt" />
+		<include name="certs/SK_proxy_OCSP_responder_2009.pem.cer" />
+	</fileset> 
+			
+   	<fileset dir="${resources.dir}" id="sk-test-certs">
+		<include name="certs/TEST*.crt" />
+                <include name="certs/iaik-tsa*.crt" />
+	</fileset> 
+
+   	<fileset dir="${lib.dir}" id="jd-libs">
+		<include name="bcmail-jdk15on-151.jar" />
+		<include name="bcprov-jdk15on-151.jar" />
+		<include name="bcpkix-jdk15on-151.jar" />
+		<include name="commons-codec-1.6.jar" />
+		<include name="commons-compress-1.3.jar" />
+		<include name="iaikPkcs11Wrapper.jar" />
+		<include name="jakarta-log4j-1.2.6.jar" />
+	</fileset>
+
+	<fileset dir="${lib.dir}" id="jd-libs-and-bin">
+                <include name="bcmail-jdk15on-151.jar" />
+                <include name="bcprov-jdk15on-151.jar" />
+                <include name="bcpkix-jdk15on-151.jar" />
+                <include name="commons-codec-1.6.jar" />
+                <include name="commons-compress-1.3.jar" />
+                <include name="iaikPkcs11Wrapper.jar" />
+                <include name="jakarta-log4j-1.2.6.jar" />
+		<include name="linux32/*" />
+		<include name="linux64/*" />
+		<include name="macUniversal/*" />
+		<include name="win32/*" />
+		<include name="win64/*" />
+        </fileset> 
+
+	<target name="clean" description="Remove generated files">
+		<delete dir="${tmp.dir}"/>
+		<delete dir="${dlib.dir}"/>
+	</target>
+
+	<target name="travis-libs" description="Downloading dependent libs for dist">
+		<mkdir dir="${dlib.dir}" />
+		<get src="http://www.bouncycastle.org/download/bcprov-jdk15on-151.jar" dest="${dlib.dir}/bcprov-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcmail-jdk15on-151.jar" dest="${dlib.dir}/bcmail-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcpg-jdk15on-151.jar" dest="${dlib.dir}/bcpg-jdk15on-151.jar" verbose="true" />
+		<get src="http://www.bouncycastle.org/download/bcpkix-jdk15on-151.jar" dest="${dlib.dir}/bcpkix-jdk15on-151.jar" verbose="true" />
+		<get src="http://repo1.maven.org/maven2/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" dest="${dlib.dir}/commons-codec-1.6.jar" verbose="true" />
+		<get src="http://central.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5.jar" dest="${dlib.dir}/commons-compress-1.5.jar" verbose="true" />
+		<get src="http://central.maven.org/maven2/log4j/log4j/1.2.7/log4j-1.2.7.jar" dest="${dlib.dir}/log4j-1.2.7.jar" verbose="true" />
+		<get src="http://maven.petalslink.com/others/es/mityc/jumbo/adsi/iaikPkcs11Wrapper/1.1.7/iaikPkcs11Wrapper-1.1.7.jar" dest="${dlib.dir}/iaikPkcs11Wrapper-1.1.7.jar" verbose="true" />
+	</target>
+
+        <target name="verchg" description="Set version number">
+	  <replace file="${src.dir}/ee/sk/digidoc/Version.java" token="LIB_VERSION" value="LIB_VERSION = &quot;${env.JDD_VERSION}&quot;; // " />	
+	</target>
+
+	<target name="init" description="Make init without local libs copying">
+		<mkdir dir="${tmp.dir}" />
+                <mkdir dir="${classes.dir}" />
+                <mkdir dir="${javadoc.gen.dir}" />
+                <mkdir dir="${tmp.dir}/lib" />
+                <mkdir dir="${tmp.dir}/doc" />
+                <copy todir="${tmp.dir}">
+                        <fileset dir="${resources.dir}">
+                          <include name="jdigidoc.cfg" />
+                          <include name="log4j.properties" />
+                        </fileset>
+                </copy>
+	</target>
+
+	<target name="travis-init-libs" description="">
+		<copy todir="${tmp.dir}/lib">
+			<fileset dir="${dlib.dir}" />
+                </copy>
+		<copy todir="${tmp.dir}/doc">
+                        <fileset dir="${doc.dir}" />
+                </copy>
+        </target>
+
+	<target name="whenJava">
+		<condition property="caller.java" value="true">
+			<contains string="${caller.name}" substring=".java" casesensitive="false" />
+		</condition>
+	</target>
+	
+	<target name="build" depends="travis-compile"
+		description="Compile, for those of us used to 'build' ;)"/>
+	
+
+	<target name="travis-compile" description="Compile with downloading jars and without ver change" depends="travis-libs,init,travis-init-libs">
+		<javac destdir="${classes.dir}" target="1.5" debug="true"
+                        deprecation="false" optimize="false" failonerror="true" encoding="UTF-8" source="1.5">
+                        <src path="${src.dir}" />
+                        <src path="${test.dir}" />
+                        <classpath refid="travis-classpath" />
+                        <compilerarg line="-Xlint:unchecked" />
+                </javac>
+	</target>
+
+	<target name="travis-javadoc" depends="travis-compile" description="Generate API documentation" >
+                <javadoc
+                        classpathref="travis-classpath"
+                        destdir="${javadoc.gen.dir}"
+                        author="true"
+                        version="true"
+                        use="true"
+                        windowtitle="JDigiDoc API"
+                        encoding="UTF-8"
+                        failonerror="false"
+                        charset="UTF-8">
+                        <fileset refid="javadoc-fileset"/>
+                        <doctitle><![CDATA[<h1>JDigiDoc</h1>]]></doctitle>
+                </javadoc>
+                <zip basedir="${javadoc.gen.dir}" destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-javadoc.zip"/>
+        </target>
+	
+
+	<target name="travis-jar" depends="travis-compile" description="Create a JAR file.">
+                <delete file="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.jar" update="false">
+                        <fileset dir="${classes.dir}">
+                                <include name="**/*.*" />
+                        </fileset>
+                        <fileset refid="sk-prod-certs" />
+                </jar>
+        </target>
+
+	<target name="esteidtestcerts" description="Create a test esteid certs jar">
+                <delete file="${tmp.dir}/esteidtestcerts.jar" failonerror="false"/>
+                <jar destfile="${tmp.dir}/esteidtestcerts.jar" update="false">
+                        <fileset refid="sk-test-certs" />
+                </jar>
+        </target>
+
+	<target name="travis-util-jar" depends="esteidtestcerts,travis-jar">
+                <jar destfile="${tmp.dir}/jdigidocutil-${env.JDD_VERSION}.jar">
+                <manifest>
+                        <attribute name="Class-Path" value="esteidtestcerts.jar lib/esteidtestcerts.jar jdigidoc-${env.JDD_VERSION}.jar lib/bcmail-jdk15on-151.jar lib/bcpkix-jdk15on-151.jar lib/bcprov-jdk15on-151.jar lib/commons-codec-1.6.jar lib/log4j-1.2.7.jar lib/commons-compress-1.5.jar lib/iaikPkcs11Wrapper-1.1.7.jar ."/>
+                        <attribute name="Main-Class" value="ee.sk.test.jdigidoc"/>
+                </manifest>
+                </jar>
+        </target>
+
+	<target name="travis-zip" depends="source,travis-javadoc,travis-util-jar">
+                <delete dir="${classes.dir}"/>
+                <delete dir="${javadoc.gen.dir}"/>
+                <zip destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}.zip">
+                <fileset dir="${tmp.dir}">
+                        <include name="**/*.*" />
+                </fileset>
+                </zip>
+        </target>
+
+
+	<target name="source" description="Create a source JAR file.">
+		<delete file="${tmp.dir}/*-source.jar" failonerror="false"/>
+		<copy file="build.xml" todir="${jdigidoc.dir}"/>
+		<jar destfile="${tmp.dir}/jdigidoc-${env.JDD_VERSION}-source.jar" update="false">
+			<fileset dir="${src.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${test.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${jdigidoc.dir}">
+                               <include name="*.xml" />
+                        </fileset>
+		</jar>
+	</target>
+
+
+</project>
